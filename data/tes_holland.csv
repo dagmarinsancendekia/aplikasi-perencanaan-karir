@@ -1,7 +1,19 @@
 id,pertanyaan,kategori,deskripsi,rekomendasi_karir
-1,Menganalisis data di laboratorium,I,Individu yang memiliki minat di bidang ini cenderung suka berpikir, mengamati, dan memecahkan masalah. Mereka menikmati pekerjaan yang membutuhkan penelitian dan analisis.,Ilmuwan, Analis Data, Ahli Farmasi
-2,Menulis novel atau puisi,A,Individu yang memiliki minat di bidang ini cenderung suka mengekspresikan diri melalui seni, musik, dan bahasa. Mereka menikmati pekerjaan yang kreatif dan tidak terstruktur.,Penulis, Desainer Grafis, Musisi, Arsitek
-3,Memperbaiki mesin yang rusak,R,Individu yang memiliki minat di bidang ini cenderung suka bekerja dengan tangan, alat, dan mesin. Mereka menikmati pekerjaan yang praktis dan menghasilkan sesuatu yang nyata.,Insinyur, Teknisi, Mekanik, Petani
-4,Memberikan konseling kepada orang lain,S,Individu yang memiliki minat di bidang ini cenderung suka membantu, mengajar, dan berinteraksi dengan orang lain. Mereka menikmati pekerjaan yang berorientasi pada layanan masyarakat.,Konselor, Guru, Perawat, HRD
-5,Merencanakan dan mengelola sebuah proyek,E,Individu yang memiliki minat di bidang ini cenderung suka memimpin, mempengaruhi, dan meyakinkan orang lain. Mereka menikmati pekerjaan yang melibatkan manajemen dan penjualan.,Manajer Proyek, Pengusaha, Marketing, Sales
-6,Mengatur file dan data dengan rapi,C,Individu yang memiliki minat di bidang ini cenderung suka bekerja dengan data, angka, dan detail. Mereka menikmati pekerjaan yang terstruktur dan terorganisir.,Akuntan, Sekretaris, Analis Keuangan, Operator
+1,Menganalisis data di laboratorium,I,"Individu yang memiliki minat di bidang ini cenderung suka berpikir mengamati dan memecahkan masalah. Mereka menikmati pekerjaan pekerjaan yang membutuhkan penelitian dan analisis. Fokus pada pemahaman dunia melalui sains dan riset.","Ilmuwan, Analis Data, Dokter, Peneliti, Profesor Sains"
+2,Menulis novel atau puisi,A,"Individu yang memiliki minat di bidang ini cenderung suka mengekspresikan diri melalui seni musik dan bahasa. Mereka menikmati pekerjaan yang kreatif dan tidak terstruktur. Mereka punya imajinasi tinggi dan orisinal.","Penulis, Desainer Grafis, Musisi, Arsitek, Seniman, Aktor"
+3,Memperbaiki mesin yang rusak,R,"Individu yang memiliki minat di bidang ini cenderung suka bekerja dengan tangan alat dan mesin. Mereka menikmati pekerjaan yang praktis dan menghasilkan sesuatu yang nyata. Preferensi pada aktivitas fisik dan konkret.","Insinyur, Teknisi, Mekanik, Petani, Polisi, Pemadam Kebakaran"
+4,Memberikan konseling kepada orang lain,S,"Individu yang memiliki minat di bidang ini cenderung suka membantu mengajar dan berinteraksi dengan orang lain. Mereka menikmati pekerjaan yang berorientasi pada layanan masyarakat. Mereka empati dan komunikatif.","Konselor, Guru, Perawat, Psikolog, Pekerja Sosial, HRD"
+5,Merencanakan dan mengelola sebuah proyek,E,"Individu yang memiliki minat di bidang ini cenderung suka memimpin mempengaruhi dan meyakinkan orang lain. Mereka menikmati pekerjaan yang melibatkan manajemen dan penjualan. Mereka ambisius dan persuasif.","Manajer Proyek, Pengusaha, Marketing, Sales, Pengacara, Politisi"
+6,Mengatur file dan data dengan rapi,C,"Individu yang memiliki minat di bidang ini cenderung suka bekerja dengan data angka dan detail. Mereka menikmati pekerjaan yang terstruktur dan terorganisir. Mereka teliti sistematis dan patuh aturan.","Akuntan, Sekretaris, Analis Keuangan, Operator, Pustakawan, Auditor"
+7,Melakukan percobaan ilmiah,I,"Anda suka melakukan eksperimen dan mencari tahu bagaimana sesuatu bekerja.","Ilmuwan, Peneliti, Ahli Kimia"
+8,Menggambar atau melukis,A,"Anda menikmati kegiatan seni visual dan menciptakan karya baru.","Seniman, Ilustrator, Desainer Fashion"
+9,Merakit peralatan elektronik,R,"Anda suka membangun atau memperbaiki benda-benda praktis.","Teknisi Elektronik, Mekanik, Tukang Las"
+10,Mengajar atau melatih orang lain,S,"Anda memiliki keinginan untuk berbagi pengetahuan dan membantu orang lain belajar.","Guru, Dosen, Pelatih, Mentor"
+11,Bernegosiasi dalam transaksi bisnis,E,"Anda suka mempengaruhi orang lain dan mencapai kesepakatan.","Negosiator, Sales Manager, Agen Properti"
+12,Membuat laporan keuangan yang akurat,C,"Anda teliti dengan angka dan detail serta suka menjaga keteraturan.","Akuntan, Auditor, Petugas Arsip"
+13,Membaca buku-buku ilmiah,I,"Anda tertarik pada informasi faktual dan ilmiah.","Peneliti, Pustakawan, Akademisi"
+14,Menulis lagu atau naskah drama,A,"Anda mengekspresikan diri melalui tulisan kreatif dan naratif.","Penulis Lagu, Penulis Skenario, Jurnalis Budaya"
+15,Bekerja di luar ruangan dengan alat,R,"Anda lebih suka pekerjaan yang melibatkan aktivitas fisik dan lingkungan alam.","Petani, Pekerja Konstruksi, Arsitek Lansekap"
+16,Menjadi sukarelawan untuk komunitas,S,"Anda senang berkontribusi pada kesejahteraan masyarakat.","Pekerja Sosial, Aktivis, Konselor Komunitas"
+17,Memimpin rapat tim,E,"Anda suka mengambil inisiatif dan mengarahkan kelompok.","Manajer Tim, Supervisor, Direktur"
+18,Mengelola database,C,"Anda teratur dan suka mengatur informasi secara sistematis.","Admin Database, Analis Sistem, Pengelola Data"
