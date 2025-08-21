@@ -38,13 +38,15 @@ class CareerGuidanceApp(customtkinter.CTk):
         self.total_questions = len(self.questions_data)
         self.current_question_index = 0
 
+        # Data tambahan untuk deskripsi singkat setiap kategori RIASEC
+        # Memperbarui deskripsi untuk lebih informatif
         self.riasec_descriptions = {
-            'R': 'Realistis (Doers): Praktis, suka bekerja dengan tangan, alat, dan mesin.',
-            'I': 'Investigatif (Thinkers): Analitis, suka memecahkan masalah, melakukan penelitian, dan berpikir kritis.',
-            'A': 'Artistik (Creators): Ekspresif, inovatif, suka seni, musik, drama, dan desain.',
-            'S': 'Sosial (Helpers): Peduli, suka membantu, mengajar, dan berinteraksi dengan orang lain.',
-            'E': 'Enterprising (Persuaders): Ambisius, suka memimpin, mempengaruhi, dan bernegosiasi.',
-            'C': 'Konvensional (Organizers): Teratur, teliti, suka bekerja dengan data, angka, dan detail.'
+            'R': 'Realistis (Doers): Individu ini praktis, kuat secara fisik, dan suka bekerja dengan tangan, alat, dan mesin. Mereka menikmati pekerjaan yang konkret dan tangible, seperti konstruksi, teknik, atau pertanian.',
+            'I': 'Investigatif (Thinkers): Individu ini analitis, logis, dan suka memecahkan masalah. Mereka tertarik pada sains, penelitian, dan kegiatan intelektual. Karir yang cocok meliputi ilmuwan, peneliti, atau dokter.',
+            'A': 'Artistik (Creators): Individu ini ekspresif, inovatif, dan imajinatif. Mereka menikmati bentuk seni seperti musik, drama, menulis, atau desain. Mereka sering menghindari struktur dan aturan yang kaku, lebih memilih kebebasan berekspresi.',
+            'S': 'Sosial (Helpers): Individu ini peduli, kooperatif, dan suka membantu orang lain. Mereka memiliki minat dalam mengajar, konseling, atau layanan masyarakat. Mereka terampil dalam berkomunikasi dan membangun hubungan.',
+            'E': 'Enterprising (Persuaders): Individu ini ambisius, energik, dan suka memimpin. Mereka menikmati mempengaruhi, meyakinkan, dan bernegosiasi. Karir yang sesuai adalah penjualan, manajemen, atau kewirausahaan.',
+            'C': 'Konvensional (Organizers): Individu ini teratur, teliti, dan suka bekerja dengan data dan detail. Mereka efisien dan suka mengikuti prosedur yang jelas. Pekerjaan yang cocok adalah akuntan, sekretaris, atau pustakawan.'
         }
         
         self.answer_vars = {}
@@ -397,9 +399,11 @@ class CareerGuidanceApp(customtkinter.CTk):
                                text="Skor Minat Anda untuk Setiap Tipe Holland (RIASEC):",
                                font=customtkinter.CTkFont(size=16, weight="bold")).grid(row=6+len(rekomendasi_list)+1, column=0, pady=(20, 5), sticky="ew")
 
+        # Mengubah cara menampilkan deskripsi kategori RIASEC agar lebih detail
         for i, (kategori, nilai) in enumerate(skor_lengkap.items()):
             score_item_frame = customtkinter.CTkFrame(results_scroll_frame, fg_color="transparent")
-            score_item_frame.grid(row=6+len(rekomendasi_list)+2+i, column=0, padx=10, pady=5, sticky="ew")
+            # Row index disesuaikan untuk menampung deskripsi tambahan
+            score_item_frame.grid(row=6+len(rekomendasi_list)+2+(i*2), column=0, padx=10, pady=5, sticky="ew") 
             score_item_frame.grid_columnconfigure(0, weight=1)
 
             score_text = f"[{kategori}] {self.riasec_descriptions[kategori].split(':')[0]} : {nilai} Poin"
@@ -408,9 +412,10 @@ class CareerGuidanceApp(customtkinter.CTk):
                                  font=customtkinter.CTkFont(size=14, weight="bold"),
                                  wraplength=550, justify="left").grid(row=0, column=0, padx=10, pady=2, sticky="w")
             
-            desc_text = self.riasec_descriptions[kategori].split(':', 1)[1].strip()
+            # Tampilkan deskripsi RIASEC yang lebih lengkap di bawah skor
+            full_desc_text = self.riasec_descriptions[kategori]
             customtkinter.CTkLabel(score_item_frame,
-                                 text=desc_text,
+                                 text=full_desc_text,
                                  font=customtkinter.CTkFont(size=12),
                                  wraplength=550, justify="left").grid(row=1, column=0, padx=10, pady=(0, 5), sticky="w")
         
@@ -421,8 +426,9 @@ class CareerGuidanceApp(customtkinter.CTk):
                                                  dark_image=Image.open(io.BytesIO(img_data)), 
                                                  size=(550, 350))
 
+            # Menyesuaikan posisi grid grafik
             chart_label = customtkinter.CTkLabel(results_scroll_frame, text="", image=chart_image)
-            chart_label.grid(row=6+len(rekomendasi_list)+2+len(skor_lengkap), column=0, pady=20)
+            chart_label.grid(row=6+len(rekomendasi_list)+2+(len(skor_lengkap)*2), column=0, pady=20) 
         # --- End Grafik Batang ---
 
         button_frame = customtkinter.CTkFrame(self.results_window, fg_color="transparent")
@@ -509,6 +515,16 @@ class CareerGuidanceApp(customtkinter.CTk):
                 leftIndent=10,
                 spaceAfter=2
             )
+            # Gaya baru untuk deskripsi RIASEC yang lebih panjang di PDF
+            style_riasec_desc = ParagraphStyle(
+                'RIASECDir',
+                parent=styles['Normal'],
+                fontSize=10,
+                alignment=TA_LEFT,
+                leftIndent=20, # Indentasi lebih dalam
+                spaceAfter=10
+            )
+
 
             y_pos = 10.5 * inch 
             x_left = inch 
@@ -571,18 +587,26 @@ class CareerGuidanceApp(customtkinter.CTk):
             P.drawOn(c, x_left, y_pos - P.height)
             y_pos -= P.height + 0.1*inch
 
+            # Mengubah cara menambahkan deskripsi kategori RIASEC ke PDF
             for kategori, nilai in skor_lengkap.items():
                 score_line = f"<b>[{kategori}] {self.riasec_descriptions[kategori].split(':')[0]} :</b> {nilai} Poin"
                 P = Paragraph(score_line, style_score_heading)
                 P.wrapOn(c, letter[0] - 2*inch, letter[1])
+                if y_pos < P.height + inch: # Cek ruang sebelum menggambar judul kategori
+                    c.showPage()
+                    y_pos = 10.5 * inch
                 P.drawOn(c, x_left, y_pos - P.height)
                 y_pos -= P.height + 0.02*inch
 
-                desc_detail = self.riasec_descriptions[kategori].split(':', 1)[1].strip()
-                P = Paragraph(desc_detail, style_score_detail)
-                P.wrapOn(c, letter[0] - 2*inch, letter[1])
-                P.drawOn(c, x_left, y_pos - P.height)
-                y_pos -= P.height + 0.1*inch 
+                # Tulis deskripsi lengkap RIASEC
+                full_riasec_desc = self.riasec_descriptions[kategori]
+                P_desc = Paragraph(full_riasec_desc, style_riasec_desc)
+                P_desc.wrapOn(c, letter[0] - 2*inch, letter[1])
+                if y_pos < P_desc.height + inch: # Cek ruang sebelum menggambar deskripsi
+                    c.showPage()
+                    y_pos = 10.5 * inch
+                P_desc.drawOn(c, x_left, y_pos - P_desc.height)
+                y_pos -= P_desc.height + 0.1*inch # Beri sedikit spasi setelah deskripsi
                 
                 if y_pos < inch: 
                     c.showPage()
@@ -591,10 +615,9 @@ class CareerGuidanceApp(customtkinter.CTk):
             # --- Tambahkan Grafik ke PDF ---
             if chart_bytes_for_pdf:
                 # Buat file sementara untuk gambar grafik
-                # Memberi ekstensi .png akan membantu ReportLab mengenali formatnya
                 with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_file:
-                    tmp_file.write(chart_bytes_for_pdf.getvalue()) # Ambil raw bytes dari BytesIO
-                    temp_chart_filepath = tmp_file.name # Simpan nama file sementara
+                    tmp_file.write(chart_bytes_for_pdf.getvalue())
+                    temp_chart_filepath = tmp_file.name
 
                 chart_height_estimate = 4 * inch 
                 chart_width_estimate = 6 * inch 
