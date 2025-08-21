@@ -1,24 +1,14 @@
 import customtkinter
 import pandas as pd
 import tkinter.messagebox
-from tkinter import filedialog
-import os
-import csv
-import tempfile # Import modul tempfile
+import io
+import base64
+from PIL import Image
 
-# Import untuk PDF generation
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
-from reportlab.platypus import Paragraph
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_LEFT, TA_CENTER
-
-# Import untuk grafik
-import matplotlib.pyplot as plt
-import io # Untuk menyimpan plot ke memori
-import base64 # Untuk mengkonversi gambar ke base64 (untuk CustomTkinter image)
-from PIL import Image 
+# Import modul yang sudah dipisahkan
+from quiz_logic import QuizLogic
+from report_generator import ReportGenerator
+from user_data_manager import UserDataManager
 
 # Pengaturan dasar CustomTkinter
 customtkinter.set_appearance_mode("System")
@@ -33,34 +23,18 @@ class CareerGuidanceApp(customtkinter.CTk):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        self.df_holland = pd.read_csv('data/tes_holland.csv')
-        self.questions_data = self.df_holland.to_dict('records')
-        self.total_questions = len(self.questions_data)
-        self.current_question_index = 0
+        # Inisialisasi logika kuesioner, data pengguna, dan generator laporan
+        self.quiz_logic = QuizLogic('data/tes_holland.csv')
+        self.user_data_manager = UserDataManager('user_records.csv')
+        self.report_generator = ReportGenerator()
 
-        # Data tambahan untuk deskripsi singkat setiap kategori RIASEC
-        # Memperbarui deskripsi untuk lebih informatif
-        self.riasec_descriptions = {
-            'R': 'Realistis (Doers): Individu ini praktis, kuat secara fisik, dan suka bekerja dengan tangan, alat, dan mesin. Mereka menikmati pekerjaan yang konkret dan tangible, seperti konstruksi, teknik, atau pertanian.',
-            'I': 'Investigatif (Thinkers): Individu ini analitis, logis, dan suka memecahkan masalah. Mereka tertarik pada sains, penelitian, dan kegiatan intelektual. Karir yang cocok meliputi ilmuwan, peneliti, atau dokter.',
-            'A': 'Artistik (Creators): Individu ini ekspresif, inovatif, dan imajinatif. Mereka menikmati bentuk seni seperti musik, drama, menulis, atau desain. Mereka sering menghindari struktur dan aturan yang kaku, lebih memilih kebebasan berekspresi.',
-            'S': 'Sosial (Helpers): Individu ini peduli, kooperatif, dan suka membantu orang lain. Mereka memiliki minat dalam mengajar, konseling, atau layanan masyarakat. Mereka terampil dalam berkomunikasi dan membangun hubungan.',
-            'E': 'Enterprising (Persuaders): Individu ini ambisius, energik, dan suka memimpin. Mereka menikmati mempengaruhi, meyakinkan, dan bernegosiasi. Karir yang sesuai adalah penjualan, manajemen, atau kewirausahaan.',
-            'C': 'Konvensional (Organizers): Individu ini teratur, teliti, dan suka bekerja dengan data dan detail. Mereka efisien dan suka mengikuti prosedur yang jelas. Pekerjaan yang cocok adalah akuntan, sekretaris, atau pustakawan.'
-        }
-        
-        self.answer_vars = {}
-        for row in self.df_holland.to_dict('records'):
-            self.answer_vars[row['id']] = customtkinter.StringVar(value="None")
-        
         self.user_data = {
             "nama": "",
             "alamat": "",
             "usia": "",
             "nomor_hp": ""
         }
-        self.user_data_csv_file = 'user_records.csv'
-
+        
         self.create_start_screen()
 
     def clear_screen(self):
@@ -101,19 +75,6 @@ class CareerGuidanceApp(customtkinter.CTk):
         start_button = customtkinter.CTkButton(self.start_frame, text="Mulai Tes", command=self.start_test_flow)
         start_button.grid(row=len(labels)+2, column=0, pady=30)
 
-    def save_user_data_to_csv(self):
-        """Menyimpan data pengguna ke file CSV."""
-        file_exists = os.path.isfile(self.user_data_csv_file)
-        
-        try:
-            with open(self.user_data_csv_file, 'a', newline='', encoding='utf-8') as f:
-                writer = csv.writer(f)
-                if not file_exists:
-                    writer.writerow(list(self.user_data.keys()))
-                writer.writerow(list(self.user_data.values()))
-        except Exception as e:
-            tkinter.messagebox.showerror("Error Simpan Data", f"Gagal menyimpan data pengguna: {e}")
-
     def start_test_flow(self):
         """Memvalidasi data pengguna, menyimpan, dan memulai kuesioner."""
         for key, entry in self.entry_widgets.items():
@@ -127,7 +88,7 @@ class CareerGuidanceApp(customtkinter.CTk):
             tkinter.messagebox.showwarning("Peringatan", "Usia harus berupa angka.")
             return
 
-        self.save_user_data_to_csv()
+        self.user_data_manager.save_user_data(self.user_data) # Menggunakan UserDataManager
 
         self.clear_screen()
         self.create_quiz_widgets()
@@ -166,12 +127,12 @@ class CareerGuidanceApp(customtkinter.CTk):
         for widget in self.question_display_frame.winfo_children():
             widget.destroy()
 
-        if self.current_question_index < self.total_questions:
-            current_q_data = self.questions_data[self.current_question_index]
+        if self.quiz_logic.current_question_index < self.quiz_logic.total_questions:
+            current_q_data = self.quiz_logic.get_current_question()
             question_id = current_q_data['id']
 
             question_label = customtkinter.CTkLabel(self.question_display_frame, 
-                                                    text=f"{self.current_question_index + 1}. {current_q_data['pertanyaan']}", 
+                                                    text=f"{self.quiz_logic.current_question_index + 1}. {current_q_data['pertanyaan']}", 
                                                     wraplength=650, 
                                                     font=customtkinter.CTkFont(size=18, weight="bold"))
             question_label.grid(row=0, column=0, padx=10, pady=(20, 10), sticky="w")
@@ -183,7 +144,7 @@ class CareerGuidanceApp(customtkinter.CTk):
                 self.question_display_frame, 
                 text="Setuju",
                 font=customtkinter.CTkFont(size=16),
-                command=lambda: self.on_answer_button_click(question_id, "setuju")
+                command=lambda q_id=question_id: self.on_answer_button_click(q_id, "setuju")
             )
             setuju_btn.grid(row=1, column=0, padx=10, pady=5, sticky="w", ipadx=20, ipady=10)
 
@@ -191,7 +152,7 @@ class CareerGuidanceApp(customtkinter.CTk):
                 self.question_display_frame, 
                 text="Tidak Setuju",
                 font=customtkinter.CTkFont(size=16),
-                command=lambda: self.on_answer_button_click(question_id, "tidak_setuju")
+                command=lambda q_id=question_id: self.on_answer_button_click(q_id, "tidak_setuju")
             )
             tidak_setuju_btn.grid(row=2, column=0, padx=10, pady=5, sticky="w", ipadx=20, ipady=10)
 
@@ -200,16 +161,16 @@ class CareerGuidanceApp(customtkinter.CTk):
                 "tidak_setuju": tidak_setuju_btn
             }
 
-            current_selection = self.answer_vars[question_id].get()
+            current_selection = self.quiz_logic.answer_vars[question_id].get()
             if current_selection != "None":
                 if current_selection == "setuju":
                     setuju_btn.configure(fg_color=selected_button_color)
                 else:
                     tidak_setuju_btn.configure(fg_color=selected_button_color)
 
-            self.prev_button.configure(state="normal" if self.current_question_index > 0 else "disabled")
+            self.prev_button.configure(state="normal" if self.quiz_logic.current_question_index > 0 else "disabled")
             
-            if self.current_question_index == self.total_questions - 1:
+            if self.quiz_logic.current_question_index == self.quiz_logic.total_questions - 1:
                 self.next_button.configure(text="Lihat Hasil Tes", command=self.show_results)
             else:
                 self.next_button.configure(text="Selanjutnya", command=self.go_next_manual)
@@ -227,123 +188,58 @@ class CareerGuidanceApp(customtkinter.CTk):
             else:
                 button_widget.configure(fg_color=default_button_color)
 
-        self.answer_vars[question_id].set(answer_value)
+        self.quiz_logic.record_answer(question_id, answer_value) # Menggunakan QuizLogic
         self.auto_advance_on_select()
 
     def auto_advance_on_select(self):
         """Otomatis melanjutkan ke pertanyaan berikutnya setelah jawaban dipilih."""
-        if self.current_question_index < self.total_questions - 1:
-            self.current_question_index += 1
+        if self.quiz_logic.current_question_index < self.quiz_logic.total_questions - 1:
+            self.quiz_logic.current_question_index += 1
             self.display_current_question()
-        elif self.current_question_index == self.total_questions - 1:
+        elif self.quiz_logic.current_question_index == self.quiz_logic.total_questions - 1:
             self.show_results()
 
     def go_next_manual(self):
         """Digunakan jika pengguna secara manual mengklik tombol 'Selanjutnya'/'Lihat Hasil Tes'."""
-        current_q_id = self.questions_data[self.current_question_index]['id']
-        if self.answer_vars[current_q_id].get() == "None":
+        current_q_id = self.quiz_logic.get_current_question()['id']
+        if self.quiz_logic.answer_vars[current_q_id].get() == "None":
             tkinter.messagebox.showwarning("Peringatan", "Mohon pilih jawaban untuk pertanyaan ini sebelum melanjutkan.")
             return
 
-        if self.current_question_index < self.total_questions - 1:
-            self.current_question_index += 1
+        if self.quiz_logic.current_question_index < self.quiz_logic.total_questions - 1:
+            self.quiz_logic.current_question_index += 1
             self.display_current_question()
         else:
             self.show_results()
 
     def go_previous(self):
         """Kembali ke pertanyaan sebelumnya."""
-        if self.current_question_index > 0:
-            self.current_question_index -= 1
+        if self.quiz_logic.current_question_index > 0:
+            self.quiz_logic.current_question_index -= 1
             self.display_current_question()
         else:
             self.prev_button.configure(state="disabled")
 
-    def create_riasec_chart(self, scores_dict):
-        """Membuat grafik batang dari skor RIASEC dan mengembalikan objek BytesIO."""
-        labels = list(scores_dict.keys())
-        values = list(scores_dict.values())
-        
-        fig, ax = plt.subplots(figsize=(6, 4), dpi=100)
-        bar_color = customtkinter.ThemeManager.theme["CTkButton"]["fg_color"][1] 
-        bars = ax.bar(labels, values, color=bar_color)
-        
-        ax.set_ylabel('Skor Minat')
-        ax.set_title('Profil Minat Holland (RIASEC)')
-        ax.set_ylim(0, max(values) + 2 if values else 10)
-        
-        for bar in bars:
-            yval = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2.0, yval + 0.5, int(yval), va='bottom', ha='center', fontsize=10)
-
-        fig.patch.set_alpha(0)
-        ax.patch.set_alpha(0)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-
-        buf = io.BytesIO()
-        plt.tight_layout()
-        plt.savefig(buf, format='png', transparent=True)
-        buf.seek(0)
-        plt.close(fig)
-        return buf
-
     def show_results(self):
         """Memproses jawaban dan menampilkan jendela hasil."""
-        skor = {kategori: 0 for kategori in self.df_holland['kategori'].unique()}
+        skor_lengkap = self.quiz_logic.calculate_scores() # Menggunakan QuizLogic
         
-        all_answered = True
-        for q_id in self.df_holland['id']:
-            if self.answer_vars[q_id].get() == "None":
-                all_answered = False
-                break
-        
-        if not all_answered:
+        if not self.quiz_logic.all_questions_answered(): # Menggunakan QuizLogic
             tkinter.messagebox.showwarning("Peringatan", "Mohon jawab semua pertanyaan sebelum melihat hasil.")
-            self.current_question_index = self.total_questions - 1 
+            self.quiz_logic.current_question_index = self.quiz_logic.total_questions - 1 
             self.display_current_question() 
             return
 
-        for i, row in self.df_holland.iterrows():
-            question_id = row['id']
-            answer = self.answer_vars[question_id].get()
-            if answer == 'setuju':
-                kategori = row['kategori']
-                if kategori in skor:
-                    skor[kategori] += 1
+        kategori_tertinggi, deskripsi_utama, rekomendasi_list_utama = self.quiz_logic.get_final_results(skor_lengkap)
+
+        # Buat grafik dan dapatkan BytesIO objek
+        chart_bytes_io = self.quiz_logic.create_riasec_chart(skor_lengkap)
+        chart_bytes_for_pdf = chart_bytes_io 
         
-        if not any(skor.values()):
-            kategori_tertinggi = "Tidak Ada Jawaban"
-            deskripsi = "Sepertinya ada masalah dalam pemrosesan jawaban Anda."
-            rekomendasi_list = ["Silakan coba tes lagi."]
-            chart_data_base64 = None
-            chart_bytes_for_pdf = None
-        else:
-            max_score = 0
-            kategori_tertinggi = None
-            for k, v in skor.items():
-                if v > max_score:
-                    max_score = v
-                    kategori_tertinggi = k
-                elif v == max_score and kategori_tertinggi is None:
-                    kategori_tertinggi = k
+        chart_bytes_io.seek(0) 
+        chart_data_base64 = base64.b64encode(chart_bytes_io.read()).decode('utf-8') 
 
-            if kategori_tertinggi is None:
-                 kategori_tertinggi = "Tidak Ada Jawaban"
-                 deskripsi = "Tidak ada jawaban 'Setuju' yang dipilih."
-                 rekomendasi_list = ["Tidak ada rekomendasi spesifik."]
-            else:
-                data_tertinggi = self.df_holland[self.df_holland['kategori'] == kategori_tertinggi].iloc[0]
-                deskripsi = data_tertinggi['deskripsi']
-                rekomendasi_list = [item.strip() for item in data_tertinggi['rekomendasi_karir'].split(',')]
-            
-            chart_bytes_io = self.create_riasec_chart(skor)
-            chart_bytes_for_pdf = chart_bytes_io 
-            
-            chart_bytes_io.seek(0) 
-            chart_data_base64 = base64.b64encode(chart_bytes_io.read()).decode('utf-8') 
-
-        self.open_results_window(kategori_tertinggi, deskripsi, rekomendasi_list, skor, chart_data_base64, chart_bytes_for_pdf)
+        self.after(10, lambda: self.open_results_window(kategori_tertinggi, deskripsi_utama, rekomendasi_list_utama, skor_lengkap, chart_data_base64, chart_bytes_for_pdf))
 
     def open_results_window(self, kategori_tertinggi, deskripsi, rekomendasi_list, skor_lengkap, chart_data_base64, chart_bytes_for_pdf):
         """Membuka jendela baru untuk menampilkan hasil tes, data pengguna, dan grafik."""
@@ -399,37 +295,31 @@ class CareerGuidanceApp(customtkinter.CTk):
                                text="Skor Minat Anda untuk Setiap Tipe Holland (RIASEC):",
                                font=customtkinter.CTkFont(size=16, weight="bold")).grid(row=6+len(rekomendasi_list)+1, column=0, pady=(20, 5), sticky="ew")
 
-        # Mengubah cara menampilkan deskripsi kategori RIASEC agar lebih detail
         for i, (kategori, nilai) in enumerate(skor_lengkap.items()):
             score_item_frame = customtkinter.CTkFrame(results_scroll_frame, fg_color="transparent")
-            # Row index disesuaikan untuk menampung deskripsi tambahan
             score_item_frame.grid(row=6+len(rekomendasi_list)+2+(i*2), column=0, padx=10, pady=5, sticky="ew") 
             score_item_frame.grid_columnconfigure(0, weight=1)
 
-            score_text = f"[{kategori}] {self.riasec_descriptions[kategori].split(':')[0]} : {nilai} Poin"
+            score_text = f"[{kategori}] {self.quiz_logic.riasec_descriptions[kategori].split(':')[0]} : {nilai} Poin" # Menggunakan quiz_logic
             customtkinter.CTkLabel(score_item_frame, 
                                  text=score_text,
                                  font=customtkinter.CTkFont(size=14, weight="bold"),
                                  wraplength=550, justify="left").grid(row=0, column=0, padx=10, pady=2, sticky="w")
             
-            # Tampilkan deskripsi RIASEC yang lebih lengkap di bawah skor
-            full_desc_text = self.riasec_descriptions[kategori]
+            full_desc_text = self.quiz_logic.riasec_descriptions[kategori] # Menggunakan quiz_logic
             customtkinter.CTkLabel(score_item_frame,
                                  text=full_desc_text,
                                  font=customtkinter.CTkFont(size=12),
                                  wraplength=550, justify="left").grid(row=1, column=0, padx=10, pady=(0, 5), sticky="w")
         
-        # --- Menampilkan Grafik Batang ---
         if chart_data_base64:
             img_data = base64.b64decode(chart_data_base64)
             chart_image = customtkinter.CTkImage(light_image=Image.open(io.BytesIO(img_data)), 
                                                  dark_image=Image.open(io.BytesIO(img_data)), 
                                                  size=(550, 350))
 
-            # Menyesuaikan posisi grid grafik
             chart_label = customtkinter.CTkLabel(results_scroll_frame, text="", image=chart_image)
             chart_label.grid(row=6+len(rekomendasi_list)+2+(len(skor_lengkap)*2), column=0, pady=20) 
-        # --- End Grafik Batang ---
 
         button_frame = customtkinter.CTkFrame(self.results_window, fg_color="transparent")
         button_frame.grid(row=1, column=0, padx=20, pady=20, sticky="ew")
@@ -437,221 +327,20 @@ class CareerGuidanceApp(customtkinter.CTk):
 
         download_button = customtkinter.CTkButton(button_frame, 
                                                  text="Unduh Hasil (PDF)", 
-                                                 command=lambda: self.download_results(kategori_tertinggi, deskripsi, rekomendasi_list, skor_lengkap, chart_bytes_for_pdf))
+                                                 command=lambda: self.report_generator.download_results(
+                                                     self.user_data, kategori_tertinggi, deskripsi, 
+                                                     rekomendasi_list, skor_lengkap, chart_bytes_for_pdf, 
+                                                     self.quiz_logic.riasec_descriptions # Teruskan riasec_descriptions
+                                                 ))
         download_button.grid(row=0, column=0, padx=5, pady=10, sticky="e")
 
         restart_button = customtkinter.CTkButton(button_frame, text="Ulangi Tes", command=self.reset_and_start_over)
         restart_button.grid(row=0, column=1, padx=5, pady=10, sticky="w")
 
-    def download_results(self, kategori_tertinggi, deskripsi, rekomendasi_list, skor_lengkap, chart_bytes_for_pdf):
-        """Menyimpan hasil tes dan data pengguna ke file PDF, termasuk grafik dari file sementara."""
-        temp_chart_filepath = None # Inisialisasi variabel untuk jalur file sementara
-
-        try:
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".pdf", 
-                filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
-                initialfile=f"Hasil_Tes_Karir_{self.user_data['nama'].replace(' ', '_')}.pdf"
-            )
-
-            if not file_path:
-                tkinter.messagebox.showinfo("Info", "Pengunduhan dibatalkan.")
-                return
-
-            c = canvas.Canvas(file_path, pagesize=letter)
-            styles = getSampleStyleSheet()
-            
-            style_title = ParagraphStyle(
-                'Title',
-                parent=styles['h1'],
-                fontSize=24,
-                alignment=TA_CENTER,
-                spaceAfter=20
-            )
-            style_heading = ParagraphStyle(
-                'Heading',
-                parent=styles['h2'],
-                fontSize=16,
-                alignment=TA_LEFT,
-                spaceAfter=10,
-                spaceBefore=15
-            )
-            style_normal = ParagraphStyle(
-                'Normal',
-                parent=styles['Normal'],
-                fontSize=12,
-                alignment=TA_LEFT,
-                spaceAfter=5
-            )
-            style_bold = ParagraphStyle(
-                'Bold',
-                parent=styles['Normal'],
-                fontSize=12,
-                alignment=TA_LEFT,
-                fontName='Helvetica-Bold',
-                spaceAfter=5
-            )
-            style_list = ParagraphStyle(
-                'List',
-                parent=styles['Normal'],
-                fontSize=12,
-                alignment=TA_LEFT,
-                leftIndent=20,
-                spaceAfter=2
-            )
-            style_score_heading = ParagraphStyle(
-                'ScoreHeading',
-                parent=styles['h3'],
-                fontSize=14,
-                alignment=TA_LEFT,
-                fontName='Helvetica-Bold',
-                spaceAfter=5
-            )
-            style_score_detail = ParagraphStyle(
-                'ScoreDetail',
-                parent=styles['Normal'],
-                fontSize=10,
-                alignment=TA_LEFT,
-                leftIndent=10,
-                spaceAfter=2
-            )
-            # Gaya baru untuk deskripsi RIASEC yang lebih panjang di PDF
-            style_riasec_desc = ParagraphStyle(
-                'RIASECDir',
-                parent=styles['Normal'],
-                fontSize=10,
-                alignment=TA_LEFT,
-                leftIndent=20, # Indentasi lebih dalam
-                spaceAfter=10
-            )
-
-
-            y_pos = 10.5 * inch 
-            x_left = inch 
-
-            P = Paragraph("Hasil Tes Perencanaan Karir", style_title)
-            P.wrapOn(c, letter[0] - 2*inch, letter[1]) 
-            P.drawOn(c, inch, y_pos - P.height)
-            y_pos -= P.height + 0.2*inch 
-
-            P = Paragraph("--- Data Pengguna ---", style_heading)
-            P.wrapOn(c, letter[0] - 2*inch, letter[1])
-            P.drawOn(c, x_left, y_pos - P.height)
-            y_pos -= P.height + 0.1*inch
-
-            user_data_lines = [
-                f"<b>Nama:</b> {self.user_data['nama']}",
-                f"<b>Alamat:</b> {self.user_data['alamat']}",
-                f"<b>Usia:</b> {self.user_data['usia']} tahun",
-                f"<b>Nomor HP:</b> {self.user_data['nomor_hp']}"
-            ]
-            for line in user_data_lines:
-                P = Paragraph(line, style_normal)
-                P.wrapOn(c, letter[0] - 2*inch, letter[1])
-                P.drawOn(c, x_left, y_pos - P.height)
-                y_pos -= P.height + 0.05*inch
-            y_pos -= 0.2*inch 
-
-            P = Paragraph("--- Hasil Tes ---", style_heading)
-            P.wrapOn(c, letter[0] - 2*inch, letter[1])
-            P.drawOn(c, x_left, y_pos - P.height)
-            y_pos -= P.height + 0.1*inch
-            
-            P = Paragraph(f"<b>Kategori minat tertinggi Anda adalah: {kategori_tertinggi}</b>", style_bold)
-            P.wrapOn(c, letter[0] - 2*inch, letter[1])
-            P.drawOn(c, x_left, y_pos - P.height)
-            y_pos -= P.height + 0.1*inch
-
-            P = Paragraph("Deskripsi Tipe Minat Anda:", style_score_heading)
-            P.wrapOn(c, letter[0] - 2*inch, letter[1])
-            P.drawOn(c, x_left, y_pos - P.height)
-            y_pos -= P.height + 0.05*inch
-            P = Paragraph(deskripsi, style_normal)
-            P.wrapOn(c, letter[0] - 2*inch, letter[1])
-            P.drawOn(c, x_left, y_pos - P.height)
-            y_pos -= P.height + 0.2*inch
-
-            P = Paragraph("Rekomendasi Karir untuk Anda:", style_score_heading)
-            P.wrapOn(c, letter[0] - 2*inch, letter[1])
-            P.drawOn(c, x_left, y_pos - P.height)
-            y_pos -= P.height + 0.05*inch
-            for karir in rekomendasi_list:
-                P = Paragraph(f"- {karir}", style_list)
-                P.wrapOn(c, letter[0] - 2*inch, letter[1])
-                P.drawOn(c, x_left, y_pos - P.height)
-                y_pos -= P.height + 0.02*inch
-            y_pos -= 0.2*inch
-
-            P = Paragraph("--- Skor Minat Anda untuk Setiap Tipe Holland (RIASEC) ---", style_heading)
-            P.wrapOn(c, letter[0] - 2*inch, letter[1])
-            P.drawOn(c, x_left, y_pos - P.height)
-            y_pos -= P.height + 0.1*inch
-
-            # Mengubah cara menambahkan deskripsi kategori RIASEC ke PDF
-            for kategori, nilai in skor_lengkap.items():
-                score_line = f"<b>[{kategori}] {self.riasec_descriptions[kategori].split(':')[0]} :</b> {nilai} Poin"
-                P = Paragraph(score_line, style_score_heading)
-                P.wrapOn(c, letter[0] - 2*inch, letter[1])
-                if y_pos < P.height + inch: # Cek ruang sebelum menggambar judul kategori
-                    c.showPage()
-                    y_pos = 10.5 * inch
-                P.drawOn(c, x_left, y_pos - P.height)
-                y_pos -= P.height + 0.02*inch
-
-                # Tulis deskripsi lengkap RIASEC
-                full_riasec_desc = self.riasec_descriptions[kategori]
-                P_desc = Paragraph(full_riasec_desc, style_riasec_desc)
-                P_desc.wrapOn(c, letter[0] - 2*inch, letter[1])
-                if y_pos < P_desc.height + inch: # Cek ruang sebelum menggambar deskripsi
-                    c.showPage()
-                    y_pos = 10.5 * inch
-                P_desc.drawOn(c, x_left, y_pos - P_desc.height)
-                y_pos -= P_desc.height + 0.1*inch # Beri sedikit spasi setelah deskripsi
-                
-                if y_pos < inch: 
-                    c.showPage()
-                    y_pos = 10.5 * inch 
-
-            # --- Tambahkan Grafik ke PDF ---
-            if chart_bytes_for_pdf:
-                # Buat file sementara untuk gambar grafik
-                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_file:
-                    tmp_file.write(chart_bytes_for_pdf.getvalue())
-                    temp_chart_filepath = tmp_file.name
-
-                chart_height_estimate = 4 * inch 
-                chart_width_estimate = 6 * inch 
-                
-                if y_pos < chart_height_estimate + inch: 
-                    c.showPage()
-                    y_pos = 10.5 * inch 
-
-                # Gambar grafik dari file sementara
-                c.drawImage(temp_chart_filepath, 
-                            (letter[0] - chart_width_estimate) / 2, 
-                            y_pos - chart_height_estimate - 0.2*inch, 
-                            width=chart_width_estimate, 
-                            height=chart_height_estimate)
-                y_pos -= chart_height_estimate + 0.5*inch 
-            # --- End Tambah Grafik ke PDF ---
-                    
-            c.save()
-            tkinter.messagebox.showinfo("Berhasil", f"Hasil tes berhasil diunduh ke:\n{file_path}")
-
-        except Exception as e:
-            tkinter.messagebox.showerror("Error", f"Terjadi kesalahan saat mengunduh hasil: {e}")
-        finally:
-            # Hapus file sementara jika sudah dibuat
-            if temp_chart_filepath and os.path.exists(temp_chart_filepath):
-                os.remove(temp_chart_filepath)
-
-
     def reset_and_start_over(self):
         """Meriset aplikasi dan kembali ke layar awal."""
-        self.current_question_index = 0
-        for q_id in self.df_holland['id']:
-            self.answer_vars[q_id].set("None")
-        self.user_data = {
+        self.quiz_logic.reset_quiz() # Menggunakan QuizLogic
+        self.user_data = { # Reset user_data di app
             "nama": "",
             "alamat": "",
             "usia": "",
