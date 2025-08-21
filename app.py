@@ -4,6 +4,7 @@ import tkinter.messagebox
 from tkinter import filedialog
 import os
 import csv
+import tempfile # Import modul tempfile
 
 # Import untuk PDF generation
 from reportlab.lib.pagesizes import letter
@@ -15,9 +16,9 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER
 
 # Import untuk grafik
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg # Opsional, jika mau embed plot di jendela utama Tkinter
 import io # Untuk menyimpan plot ke memori
 import base64 # Untuk mengkonversi gambar ke base64 (untuk CustomTkinter image)
+from PIL import Image 
 
 # Pengaturan dasar CustomTkinter
 customtkinter.set_appearance_mode("System")
@@ -261,30 +262,28 @@ class CareerGuidanceApp(customtkinter.CTk):
         labels = list(scores_dict.keys())
         values = list(scores_dict.values())
         
-        fig, ax = plt.subplots(figsize=(6, 4), dpi=100) # Ukuran dan DPI grafik
-        bars = ax.bar(labels, values, color=customtkinter.ThemeManager.theme["CTkButton"]["fg_color"][1]) # Warna CustomTkinter
+        fig, ax = plt.subplots(figsize=(6, 4), dpi=100)
+        bar_color = customtkinter.ThemeManager.theme["CTkButton"]["fg_color"][1] 
+        bars = ax.bar(labels, values, color=bar_color)
         
         ax.set_ylabel('Skor Minat')
         ax.set_title('Profil Minat Holland (RIASEC)')
-        ax.set_ylim(0, max(values) + 2 if values else 10) # Atur batas Y
+        ax.set_ylim(0, max(values) + 2 if values else 10)
         
-        # Menampilkan nilai di atas setiap batang
         for bar in bars:
             yval = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2.0, yval + 0.5, int(yval), va='bottom', ha='center', fontsize=10) # va: vertical alignment, ha: horizontal alignment
+            ax.text(bar.get_x() + bar.get_width()/2.0, yval + 0.5, int(yval), va='bottom', ha='center', fontsize=10)
 
-        # Atur warna background figure dan axes agar transparan untuk CustomTkinter
         fig.patch.set_alpha(0)
         ax.patch.set_alpha(0)
-        ax.spines['top'].set_visible(False) # Hapus garis atas
-        ax.spines['right'].set_visible(False) # Hapus garis kanan
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
 
-        # Simpan grafik ke objek BytesIO
         buf = io.BytesIO()
-        plt.tight_layout() # Sesuaikan layout agar semua elemen pas
-        plt.savefig(buf, format='png', transparent=True) # Simpan sebagai PNG transparan
-        buf.seek(0) # Kembali ke awal buffer
-        plt.close(fig) # Tutup figure untuk menghemat memori
+        plt.tight_layout()
+        plt.savefig(buf, format='png', transparent=True)
+        buf.seek(0)
+        plt.close(fig)
         return buf
 
     def show_results(self):
@@ -315,8 +314,8 @@ class CareerGuidanceApp(customtkinter.CTk):
             kategori_tertinggi = "Tidak Ada Jawaban"
             deskripsi = "Sepertinya ada masalah dalam pemrosesan jawaban Anda."
             rekomendasi_list = ["Silakan coba tes lagi."]
-            chart_data_base64 = None # Tidak ada grafik jika tidak ada jawaban
-            chart_bytes_for_pdf = None # Tidak ada grafik jika tidak ada jawaban
+            chart_data_base64 = None
+            chart_bytes_for_pdf = None
         else:
             max_score = 0
             kategori_tertinggi = None
@@ -324,10 +323,10 @@ class CareerGuidanceApp(customtkinter.CTk):
                 if v > max_score:
                     max_score = v
                     kategori_tertinggi = k
-                elif v == max_score and kategori_tertinggi is None: # Ambil yang pertama jika ada yang sama
+                elif v == max_score and kategori_tertinggi is None:
                     kategori_tertinggi = k
 
-            if kategori_tertinggi is None: # Fallback jika semua skor 0
+            if kategori_tertinggi is None:
                  kategori_tertinggi = "Tidak Ada Jawaban"
                  deskripsi = "Tidak ada jawaban 'Setuju' yang dipilih."
                  rekomendasi_list = ["Tidak ada rekomendasi spesifik."]
@@ -337,10 +336,10 @@ class CareerGuidanceApp(customtkinter.CTk):
                 rekomendasi_list = [item.strip() for item in data_tertinggi['rekomendasi_karir'].split(',')]
             
             chart_bytes_io = self.create_riasec_chart(skor)
-            chart_bytes_for_pdf = chart_bytes_io # Objek BytesIO untuk PDF
+            chart_bytes_for_pdf = chart_bytes_io 
             
-            chart_bytes_io.seek(0) # Pastikan kursor di awal untuk dibaca
-            chart_data_base64 = base64.b64encode(chart_bytes_io.read()).decode('utf-8') # Untuk tampilan GUI
+            chart_bytes_io.seek(0) 
+            chart_data_base64 = base64.b64encode(chart_bytes_io.read()).decode('utf-8') 
 
         self.open_results_window(kategori_tertinggi, deskripsi, rekomendasi_list, skor, chart_data_base64, chart_bytes_for_pdf)
 
@@ -348,7 +347,7 @@ class CareerGuidanceApp(customtkinter.CTk):
         """Membuka jendela baru untuk menampilkan hasil tes, data pengguna, dan grafik."""
         self.results_window = customtkinter.CTkToplevel(self)
         self.results_window.title("Hasil Tes Karir Anda")
-        self.results_window.geometry("700x850") # Ukuran jendela lebih tinggi untuk grafik
+        self.results_window.geometry("700x850")
         self.results_window.grab_set()
         self.results_window.resizable(False, False)
 
@@ -417,11 +416,10 @@ class CareerGuidanceApp(customtkinter.CTk):
         
         # --- Menampilkan Grafik Batang ---
         if chart_data_base64:
-            # Karena CustomTkinter Image membutuhkan data binary, kita perlu decode dulu
             img_data = base64.b64decode(chart_data_base64)
             chart_image = customtkinter.CTkImage(light_image=Image.open(io.BytesIO(img_data)), 
                                                  dark_image=Image.open(io.BytesIO(img_data)), 
-                                                 size=(550, 350)) # Sesuaikan ukuran sesuai kebutuhan
+                                                 size=(550, 350))
 
             chart_label = customtkinter.CTkLabel(results_scroll_frame, text="", image=chart_image)
             chart_label.grid(row=6+len(rekomendasi_list)+2+len(skor_lengkap), column=0, pady=20)
@@ -433,14 +431,16 @@ class CareerGuidanceApp(customtkinter.CTk):
 
         download_button = customtkinter.CTkButton(button_frame, 
                                                  text="Unduh Hasil (PDF)", 
-                                                 command=lambda: self.download_results(kategori_tertinggi, deskripsi, rekomendasi_list, skor_lengkap, chart_bytes_for_pdf)) # Kirim data grafik ke fungsi download
+                                                 command=lambda: self.download_results(kategori_tertinggi, deskripsi, rekomendasi_list, skor_lengkap, chart_bytes_for_pdf))
         download_button.grid(row=0, column=0, padx=5, pady=10, sticky="e")
 
         restart_button = customtkinter.CTkButton(button_frame, text="Ulangi Tes", command=self.reset_and_start_over)
         restart_button.grid(row=0, column=1, padx=5, pady=10, sticky="w")
 
     def download_results(self, kategori_tertinggi, deskripsi, rekomendasi_list, skor_lengkap, chart_bytes_for_pdf):
-        """Menyimpan hasil tes dan data pengguna ke file PDF."""
+        """Menyimpan hasil tes dan data pengguna ke file PDF, termasuk grafik dari file sementara."""
+        temp_chart_filepath = None # Inisialisasi variabel untuk jalur file sementara
+
         try:
             file_path = filedialog.asksaveasfilename(
                 defaultextension=".pdf", 
@@ -590,25 +590,26 @@ class CareerGuidanceApp(customtkinter.CTk):
 
             # --- Tambahkan Grafik ke PDF ---
             if chart_bytes_for_pdf:
-                # Pastikan kursor di awal BytesIO sebelum membaca untuk drawImage
-                chart_bytes_for_pdf.seek(0) 
-                
-                # Cek apakah perlu halaman baru untuk grafik
-                # Ukuran grafik kurang lebih 6x4 inch, jadi tambahkan margin
-                chart_height_estimate = 4 * inch # Tinggi grafik
-                chart_width_estimate = 6 * inch # Lebar grafik
-                
-                if y_pos < chart_height_estimate + inch: # Jika tidak cukup ruang di halaman ini
-                    c.showPage()
-                    y_pos = 10.5 * inch # Reset y_pos di halaman baru
+                # Buat file sementara untuk gambar grafik
+                # Memberi ekstensi .png akan membantu ReportLab mengenali formatnya
+                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_file:
+                    tmp_file.write(chart_bytes_for_pdf.getvalue()) # Ambil raw bytes dari BytesIO
+                    temp_chart_filepath = tmp_file.name # Simpan nama file sementara
 
-                # Gambar grafik di tengah halaman
-                c.drawImage(io.BytesIO(chart_bytes_for_pdf.read()), 
-                            (letter[0] - chart_width_estimate) / 2, # X posisi tengah
-                            y_pos - chart_height_estimate - 0.2*inch, # Y posisi
+                chart_height_estimate = 4 * inch 
+                chart_width_estimate = 6 * inch 
+                
+                if y_pos < chart_height_estimate + inch: 
+                    c.showPage()
+                    y_pos = 10.5 * inch 
+
+                # Gambar grafik dari file sementara
+                c.drawImage(temp_chart_filepath, 
+                            (letter[0] - chart_width_estimate) / 2, 
+                            y_pos - chart_height_estimate - 0.2*inch, 
                             width=chart_width_estimate, 
                             height=chart_height_estimate)
-                y_pos -= chart_height_estimate + 0.5*inch # Pindah ke bawah setelah grafik
+                y_pos -= chart_height_estimate + 0.5*inch 
             # --- End Tambah Grafik ke PDF ---
                     
             c.save()
@@ -616,6 +617,11 @@ class CareerGuidanceApp(customtkinter.CTk):
 
         except Exception as e:
             tkinter.messagebox.showerror("Error", f"Terjadi kesalahan saat mengunduh hasil: {e}")
+        finally:
+            # Hapus file sementara jika sudah dibuat
+            if temp_chart_filepath and os.path.exists(temp_chart_filepath):
+                os.remove(temp_chart_filepath)
+
 
     def reset_and_start_over(self):
         """Meriset aplikasi dan kembali ke layar awal."""
@@ -637,4 +643,3 @@ class CareerGuidanceApp(customtkinter.CTk):
 if __name__ == '__main__':
     app = CareerGuidanceApp()
     app.mainloop()
-
