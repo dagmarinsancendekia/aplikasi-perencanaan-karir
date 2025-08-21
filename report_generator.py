@@ -20,7 +20,7 @@ class ReportGenerator:
         styles = getSampleStyleSheet()
 
         # Header
-        header_text = f"Laporan Hasil Tes Karir - {user_name}"
+        header_text = f"Laporan Hasil Tes - {user_name}"
         P_header = Paragraph(header_text, ParagraphStyle(
             'HeaderStyle',
             parent=styles['h3'],
@@ -181,7 +181,7 @@ class ReportGenerator:
             P.drawOn(c, inch, y_pos - P.height)
             y_pos -= P.height + 0.2*inch 
 
-            P = Paragraph("--- Data Pengguna ---", style_heading)
+            P = Paragraph("___Data Pengguna", style_heading)
             P.wrapOn(c, letter[0] - 2*inch, letter[1])
             if y_pos < P.height + inch: c.showPage(); page_num += 1; self.add_pdf_page_layout(c, user_data['nama'], page_num); y_pos = letter[1] - 1.5*inch 
             P.drawOn(c, x_left, y_pos - P.height)
@@ -202,7 +202,7 @@ class ReportGenerator:
                 y_pos -= P.height + 0.05*inch
             y_pos -= 0.2*inch 
 
-            P = Paragraph("--- Hasil Tes ---", style_heading)
+            P = Paragraph("___Hasil Tes", style_heading)
             P.wrapOn(c, letter[0] - 2*inch, letter[1])
             if y_pos < P.height + inch: 
                 c.showPage(); page_num += 1; self.add_pdf_page_layout(c, user_data['nama'], page_num); y_pos = letter[1] - 1.5*inch
@@ -266,7 +266,7 @@ class ReportGenerator:
                 y_pos -= P.height + 0.02*inch
             y_pos -= 0.2*inch
 
-            P = Paragraph("--- Skor Minat Anda untuk Setiap Tipe Holland (RIASEC) ---", style_heading)
+            P = Paragraph("Skor Minat Anda untuk Setiap Tipe Holland (RIASEC)", style_heading)
             P.wrapOn(c, letter[0] - 2*inch, letter[1])
             if y_pos < P.height + inch: 
                 c.showPage(); page_num += 1; self.add_pdf_page_layout(c, user_data['nama'], page_num); y_pos = letter[1] - 1.5*inch
