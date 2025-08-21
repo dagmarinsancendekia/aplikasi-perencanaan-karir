@@ -143,7 +143,7 @@ class CareerGuidanceApp(customtkinter.CTk):
 
         self.question_display_frame = customtkinter.CTkFrame(self.quiz_frame, fg_color="transparent")
         self.question_display_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
-        self.question_display_frame.grid_columnconfigure(0, weight=1) # Pastikan kolom memiliki weight agar centering bekerja
+        self.question_display_frame.grid_columnconfigure(0, weight=1) 
         self.question_display_frame.grid_rowconfigure((0, 1, 2), weight=1)
 
         self.navigation_frame = customtkinter.CTkFrame(self.quiz_frame, fg_color="transparent")
@@ -169,27 +169,27 @@ class CareerGuidanceApp(customtkinter.CTk):
                                                     text=f"{self.quiz_logic.current_question_index + 1}. {current_q_data['pertanyaan']}", 
                                                     wraplength=650, 
                                                     font=customtkinter.CTkFont(size=18, weight="bold"),
-                                                    justify="center") # Rata tengah teks pertanyaan
-            question_label.grid(row=0, column=0, padx=10, pady=(20, 10), sticky="ew") # Sticky ew agar label memenuhi lebar dan justify center bekerja
+                                                    justify="center") 
+            question_label.grid(row=0, column=0, padx=10, pady=(20, 10), sticky="ew") 
 
             default_button_color = customtkinter.ThemeManager.theme["CTkButton"]["fg_color"]
             selected_button_color = customtkinter.ThemeManager.theme["CTkButton"]["hover_color"]
 
             setuju_btn = customtkinter.CTkButton(
                 self.question_display_frame, 
-                text="Setuju",
+                text="Ya, ini cocok dengan saya!", # Teks tombol lebih friendly
                 font=customtkinter.CTkFont(size=16),
                 command=lambda q_id=question_id: self.on_answer_button_click(q_id, "setuju")
             )
-            setuju_btn.grid(row=1, column=0, padx=10, pady=5) # Hapus sticky="w" untuk rata tengah
+            setuju_btn.grid(row=1, column=0, padx=10, pady=5) 
 
             tidak_setuju_btn = customtkinter.CTkButton(
                 self.question_display_frame, 
-                text="Tidak Setuju",
+                text="Tidak, ini bukan saya.", # Teks tombol lebih friendly
                 font=customtkinter.CTkFont(size=16),
                 command=lambda q_id=question_id: self.on_answer_button_click(q_id, "tidak_setuju")
             )
-            tidak_setuju_btn.grid(row=2, column=0, padx=10, pady=5) # Hapus sticky="w" untuk rata tengah
+            tidak_setuju_btn.grid(row=2, column=0, padx=10, pady=5) 
 
             self.current_answer_buttons = {
                 "setuju": setuju_btn,

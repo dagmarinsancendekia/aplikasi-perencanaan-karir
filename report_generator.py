@@ -21,29 +21,27 @@ class ReportGenerator:
 
         # Header
         header_text = f"Laporan Hasil Tes Karir - {user_name}"
-        # Ukuran font header disesuaikan
         P_header = Paragraph(header_text, ParagraphStyle(
             'HeaderStyle',
             parent=styles['h3'],
-            fontSize=13, # Sedikit lebih kecil agar tidak terlalu menonjol dari judul utama
+            fontSize=13, 
             alignment=TA_LEFT,
-            fontName='Helvetica-Bold' # Pastikan font yang jelas
+            fontName='Helvetica-Bold' 
         ))
         P_header.wrapOn(canvas_obj, letter[0] - 2*inch, letter[1])
         P_header.drawOn(canvas_obj, inch, letter[1] - 0.75*inch)
         
         # Garis pembatas header
-        canvas_obj.setStrokeColorRGB(0.7, 0.7, 0.7) # Warna abu-abu
+        canvas_obj.setStrokeColorRGB(0.7, 0.7, 0.7) 
         canvas_obj.setLineWidth(0.5)
         canvas_obj.line(inch, letter[1] - 1.0*inch, letter[0] - inch, letter[1] - 1.0*inch)
 
         # Footer
         footer_text = f"Halaman {page_num}"
-        # Ukuran font footer disesuaikan
         P_footer = Paragraph(footer_text, ParagraphStyle(
             'FooterStyle',
             parent=styles['Normal'],
-            fontSize=10, # Ukuran standar untuk footer
+            fontSize=10, 
             alignment=TA_CENTER
         ))
         P_footer.wrapOn(canvas_obj, letter[0] - 2*inch, letter[1])
@@ -77,15 +75,15 @@ class ReportGenerator:
             style_title = ParagraphStyle(
                 'Title',
                 parent=styles['h1'],
-                fontSize=26, # Ukuran sedikit diperbesar untuk judul utama
+                fontSize=26, 
                 alignment=TA_CENTER,
                 spaceAfter=20,
-                fontName='Helvetica-Bold' # Tambahkan font bold untuk judul
+                fontName='Helvetica-Bold' 
             )
             style_heading = ParagraphStyle(
                 'Heading',
                 parent=styles['h2'],
-                fontSize=17, # Ukuran sedikit diperbesar untuk heading bagian
+                fontSize=17, 
                 alignment=TA_LEFT,
                 spaceAfter=10,
                 spaceBefore=15,
@@ -94,14 +92,14 @@ class ReportGenerator:
             style_normal = ParagraphStyle(
                 'Normal',
                 parent=styles['Normal'],
-                fontSize=11, # Ukuran standar teks normal
+                fontSize=11, 
                 alignment=TA_LEFT,
                 spaceAfter=5
             )
             style_bold = ParagraphStyle(
                 'Bold',
                 parent=styles['Normal'],
-                fontSize=11, # Konsisten dengan normal, hanya bold
+                fontSize=11, 
                 alignment=TA_LEFT,
                 fontName='Helvetica-Bold',
                 spaceAfter=5
@@ -109,7 +107,7 @@ class ReportGenerator:
             style_list = ParagraphStyle(
                 'List',
                 parent=styles['Normal'],
-                fontSize=11, # Konsisten dengan normal
+                fontSize=11, 
                 alignment=TA_LEFT,
                 leftIndent=20,
                 spaceAfter=2
@@ -125,11 +123,11 @@ class ReportGenerator:
             style_table_cell_bold = ParagraphStyle(
                 'TableCellBold',
                 parent=styles['Normal'],
-                fontSize=10, # Tetap 10 untuk cell bold utama
+                fontSize=10, 
                 alignment=TA_LEFT,
                 fontName='Helvetica-Bold',
             )
-            style_table_cell_normal = ParagraphStyle( # Tidak digunakan secara langsung, tapi diselaraskan
+            style_table_cell_normal = ParagraphStyle( 
                 'TableCellNormal',
                 parent=styles['Normal'],
                 fontSize=9, 
@@ -138,12 +136,12 @@ class ReportGenerator:
             style_score_heading = ParagraphStyle(
                 'ScoreHeading',
                 parent=styles['h3'],
-                fontSize=15, # Ukuran sedikit diperbesar untuk sub-heading
+                fontSize=15, 
                 alignment=TA_LEFT,
                 fontName='Helvetica-Bold',
                 spaceAfter=5
             )
-            style_score_detail = ParagraphStyle( # Tidak digunakan secara langsung, tapi diselaraskan
+            style_score_detail = ParagraphStyle( 
                 'ScoreDetail',
                 parent=styles['Normal'],
                 fontSize=9, 
@@ -154,11 +152,22 @@ class ReportGenerator:
             style_riasec_desc = ParagraphStyle(
                 'RIASECDir',
                 parent=styles['Normal'],
-                fontSize=10, # Ukuran teks deskripsi RIASEC
+                fontSize=10, 
                 alignment=TA_LEFT,
                 leftIndent=20, 
                 spaceAfter=10
             )
+            # Gaya baru untuk menyorot kategori minat tertinggi
+            style_top_interest_highlight = ParagraphStyle(
+                'TopInterestHighlight',
+                parent=styles['h1'], 
+                fontSize=22,        
+                alignment=TA_LEFT, 
+                fontName='Helvetica-Bold',
+                textColor=colors.HexColor('#4A90E2'), 
+                spaceAfter=5 
+            )
+
 
             y_pos = letter[1] - 1.5*inch 
             x_left = inch 
@@ -200,12 +209,34 @@ class ReportGenerator:
             P.drawOn(c, x_left, y_pos - P.height)
             y_pos -= P.height + 0.1*inch
             
-            P = Paragraph(f"<b>Kategori minat tertinggi Anda adalah: {kategori_tertinggi}</b>", style_bold)
-            P.wrapOn(c, letter[0] - 2*inch, letter[1])
-            if y_pos < P.height + inch: 
+            # --- Perubahan untuk menyorot kategori tertinggi dan detailnya ---
+            # Lead-in text
+            P_intro_cat = Paragraph("Kategori minat tertinggi Anda adalah:", style_score_heading)
+            P_intro_cat.wrapOn(c, letter[0] - 2*inch, letter[1])
+            if y_pos < P_intro_cat.height + inch: 
                 c.showPage(); page_num += 1; self.add_pdf_page_layout(c, user_data['nama'], page_num); y_pos = letter[1] - 1.5*inch
-            P.drawOn(c, x_left, y_pos - P.height)
-            y_pos -= P.height + 0.1*inch
+            P_intro_cat.drawOn(c, x_left, y_pos - P_intro_cat.height)
+            y_pos -= P_intro_cat.height + 0.05*inch 
+
+            # Highlighted category name and its short description
+            highest_riasec_full_desc_val = riasec_descriptions.get(kategori_tertinggi, 'Deskripsi tidak tersedia.')
+            highest_riasec_short_name = highest_riasec_full_desc_val.split(':')[0].strip()
+            
+            P_highlight_cat = Paragraph(f"{kategori_tertinggi} - {highest_riasec_short_name}", style_top_interest_highlight)
+            P_highlight_cat.wrapOn(c, letter[0] - 2*inch, letter[1])
+            if y_pos < P_highlight_cat.height + inch: 
+                c.showPage(); page_num += 1; self.add_pdf_page_layout(c, user_data['nama'], page_num); y_pos = letter[1] - 1.5*inch
+            P_highlight_cat.drawOn(c, x_left, y_pos - P_highlight_cat.height)
+            y_pos -= P_highlight_cat.height + 0.1*inch 
+
+            # Full detailed description for the highest category
+            P_full_desc_cat = Paragraph(f"<b>Deskripsi:</b> {highest_riasec_full_desc_val}", style_normal) 
+            P_full_desc_cat.wrapOn(c, letter[0] - 2*inch, letter[1])
+            if y_pos < P_full_desc_cat.height + inch: 
+                c.showPage(); page_num += 1; self.add_pdf_page_layout(c, user_data['nama'], page_num); y_pos = letter[1] - 1.5*inch
+            P_full_desc_cat.drawOn(c, x_left, y_pos - P_full_desc_cat.height)
+            y_pos -= P_full_desc_cat.height + 0.2*inch 
+            # --- Akhir perubahan untuk menyorot kategori tertinggi ---
 
             P = Paragraph("Deskripsi Tipe Minat Anda:", style_score_heading)
             P.wrapOn(c, letter[0] - 2*inch, letter[1])
@@ -261,7 +292,7 @@ class ReportGenerator:
                 
                 table_data.append([
                     Paragraph(f"<b>{kategori}</b>", style_table_cell_bold),
-                    Paragraph(f"<b>{short_name}</b><br/><font size='9'>{full_desc_riasec}</font>", style_table_cell_bold), # Menggunakan font size 9
+                    Paragraph(f"<b>{short_name}</b><br/><font size='9'>{full_desc_riasec}</font>", style_table_cell_bold), 
                     Paragraph(str(nilai), style_table_cell_bold)
                 ])
             
@@ -271,7 +302,7 @@ class ReportGenerator:
             
             # Membangun TableStyle secara dinamis untuk latar belakang bergantian
             table_styles = [
-                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#4A90E2')), # Header biru
+                ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#4A90E2')), 
                 ('TEXTCOLOR', (0,0), (-1,0), colors.white),
                 ('ALIGN', (0,0), (-1,-1), 'LEFT'),
                 ('VALIGN', (0,0), (-1,-1), 'TOP'), 
@@ -281,7 +312,6 @@ class ReportGenerator:
                 ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
                 ('BOX', (0,0), (-1,-1), 1, colors.black),
             ]
-            # Tambahkan gaya latar belakang bergantian untuk setiap baris data yang ada
             for i in range(1, len(table_data)): 
                 bg_color = light_grey if (i - 1) % 2 == 0 else colors.white 
                 table_styles.append(('BACKGROUND', (0,i), (-1,i), bg_color))
