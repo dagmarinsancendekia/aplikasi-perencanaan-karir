@@ -43,37 +43,71 @@ class CareerGuidanceApp(customtkinter.CTk):
             widget.destroy()
 
     def create_start_screen(self):
-        """Membuat layar awal untuk input data pengguna."""
+        """Membuat layar awal untuk input data pengguna dengan tampilan yang lebih menarik."""
         self.clear_screen()
 
-        self.start_frame = customtkinter.CTkFrame(self)
-        self.start_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
-        self.start_frame.grid_columnconfigure(0, weight=1)
+        # Frame utama untuk menampung konten layar awal, berpusat
+        main_start_frame = customtkinter.CTkFrame(self, fg_color="transparent")
+        main_start_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        main_start_frame.grid_columnconfigure(0, weight=1)
+        main_start_frame.grid_rowconfigure(0, weight=1) # Agar inner_frame bisa berpusat vertikal
 
-        customtkinter.CTkLabel(self.start_frame, 
-                               text="Selamat Datang di Aplikasi Perencanaan Karir!",
-                               font=customtkinter.CTkFont(size=24, weight="bold")).grid(row=0, column=0, pady=(20, 10))
+        # Inner frame sebagai 'card' untuk data input
+        self.start_card_frame = customtkinter.CTkFrame(main_start_frame, corner_radius=15, fg_color=("gray85", "gray15")) # Sudut membulat, warna abu-abu pastel
+        self.start_card_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        self.start_card_frame.grid_columnconfigure(0, weight=1)
         
-        customtkinter.CTkLabel(self.start_frame, 
-                               text="Silakan masukkan data diri Anda sebelum memulai tes:",
-                               font=customtkinter.CTkFont(size=14)).grid(row=1, column=0, pady=(0, 20))
+        # Judul Utama
+        customtkinter.CTkLabel(self.start_card_frame, 
+                               text="Selamat Datang di Aplikasi Perencanaan Karir!",
+                               font=customtkinter.CTkFont(size=28, weight="bold"), # Font lebih besar dan tebal
+                               text_color=("gray10", "gray90")).grid(row=0, column=0, pady=(30, 10)) # Warna teks disesuaikan
+
+        # Instruksi
+        customtkinter.CTkLabel(self.start_card_frame, 
+                               text="Kami akan membantu Anda menemukan minat karir. Untuk memulai, mohon isi data diri Anda di bawah ini:",
+                               font=customtkinter.CTkFont(size=15),
+                               wraplength=500, # Batasi panjang teks agar rapi
+                               justify="center", # Teks rata tengah
+                               text_color=("gray20", "gray70")).grid(row=1, column=0, pady=(0, 25))
+
+        # Frame untuk input field agar lebih teratur
+        input_fields_frame = customtkinter.CTkFrame(self.start_card_frame, fg_color="transparent")
+        input_fields_frame.grid(row=2, column=0, pady=10)
+        input_fields_frame.grid_columnconfigure(0, weight=1)
+        input_fields_frame.grid_columnconfigure(1, weight=3) # Kolom input lebih lebar
 
         self.entry_widgets = {}
         labels = ["Nama Lengkap", "Alamat", "Usia", "Nomor HP"]
         keys = ["nama", "alamat", "usia", "nomor_hp"]
 
         for i, (label_text, key) in enumerate(zip(labels, keys)):
-            frame_input = customtkinter.CTkFrame(self.start_frame, fg_color="transparent")
-            frame_input.grid(row=2+i, column=0, pady=5, sticky="ew")
-            frame_input.grid_columnconfigure((0,1), weight=1)
-
-            customtkinter.CTkLabel(frame_input, text=f"{label_text}:", width=120, anchor="w").grid(row=0, column=0, padx=10, pady=5, sticky="w")
-            entry = customtkinter.CTkEntry(frame_input, placeholder_text=label_text, width=300)
-            entry.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+            # label_text
+            customtkinter.CTkLabel(input_fields_frame, 
+                                   text=f"{label_text}:", 
+                                   font=customtkinter.CTkFont(size=14, weight="bold"), # Label input juga bold
+                                   text_color=("gray20", "gray70"),
+                                   anchor="w").grid(row=i, column=0, padx=15, pady=8, sticky="w")
+            # Entry field
+            entry = customtkinter.CTkEntry(input_fields_frame, 
+                                           placeholder_text=label_text, 
+                                           width=300, 
+                                           height=35, # Tinggi entry field
+                                           corner_radius=10, # Sudut membulat untuk entry
+                                           font=customtkinter.CTkFont(size=14))
+            entry.grid(row=i, column=1, padx=15, pady=8, sticky="ew")
             self.entry_widgets[key] = entry
         
-        start_button = customtkinter.CTkButton(self.start_frame, text="Mulai Tes", command=self.start_test_flow)
-        start_button.grid(row=len(labels)+2, column=0, pady=30)
+        # Tombol Mulai Tes
+        start_button = customtkinter.CTkButton(self.start_card_frame, 
+                                               text="Mulai Tes", 
+                                               command=self.start_test_flow,
+                                               font=customtkinter.CTkFont(size=18, weight="bold"), # Font tombol lebih besar
+                                               height=45, # Tinggi tombol
+                                               corner_radius=10, # Sudut membulat
+                                               fg_color="#4A90E2", # Warna biru yang konsisten
+                                               hover_color="#3A7DC1") # Warna hover yang sedikit lebih gelap
+        start_button.grid(row=3, column=0, pady=(30, 30)) # Posisi tombol setelah input fields
 
     def start_test_flow(self):
         """Memvalidasi data pengguna, menyimpan, dan memulai kuesioner."""
@@ -188,7 +222,7 @@ class CareerGuidanceApp(customtkinter.CTk):
             else:
                 button_widget.configure(fg_color=default_button_color)
 
-        self.quiz_logic.record_answer(question_id, answer_value) # Menggunakan QuizLogic
+        self.quiz_logic.record_answer(question_id, answer_value) 
         self.auto_advance_on_select()
 
     def auto_advance_on_select(self):
@@ -222,9 +256,9 @@ class CareerGuidanceApp(customtkinter.CTk):
 
     def show_results(self):
         """Memproses jawaban dan menampilkan jendela hasil."""
-        skor_lengkap = self.quiz_logic.calculate_scores() # Menggunakan QuizLogic
+        skor_lengkap = self.quiz_logic.calculate_scores() 
         
-        if not self.quiz_logic.all_questions_answered(): # Menggunakan QuizLogic
+        if not self.quiz_logic.all_questions_answered(): 
             tkinter.messagebox.showwarning("Peringatan", "Mohon jawab semua pertanyaan sebelum melihat hasil.")
             self.quiz_logic.current_question_index = self.quiz_logic.total_questions - 1 
             self.display_current_question() 
@@ -232,7 +266,6 @@ class CareerGuidanceApp(customtkinter.CTk):
 
         kategori_tertinggi, deskripsi_utama, rekomendasi_list_utama = self.quiz_logic.get_final_results(skor_lengkap)
 
-        # Buat grafik dan dapatkan BytesIO objek
         chart_bytes_io = self.quiz_logic.create_riasec_chart(skor_lengkap)
         chart_bytes_for_pdf = chart_bytes_io 
         
@@ -300,13 +333,13 @@ class CareerGuidanceApp(customtkinter.CTk):
             score_item_frame.grid(row=6+len(rekomendasi_list)+2+(i*2), column=0, padx=10, pady=5, sticky="ew") 
             score_item_frame.grid_columnconfigure(0, weight=1)
 
-            score_text = f"[{kategori}] {self.quiz_logic.riasec_descriptions[kategori].split(':')[0]} : {nilai} Poin" # Menggunakan quiz_logic
+            score_text = f"[{kategori}] {self.quiz_logic.riasec_descriptions[kategori].split(':')[0]} : {nilai} Poin" 
             customtkinter.CTkLabel(score_item_frame, 
                                  text=score_text,
                                  font=customtkinter.CTkFont(size=14, weight="bold"),
                                  wraplength=550, justify="left").grid(row=0, column=0, padx=10, pady=2, sticky="w")
             
-            full_desc_text = self.quiz_logic.riasec_descriptions[kategori] # Menggunakan quiz_logic
+            full_desc_text = self.quiz_logic.riasec_descriptions[kategori] 
             customtkinter.CTkLabel(score_item_frame,
                                  text=full_desc_text,
                                  font=customtkinter.CTkFont(size=12),
@@ -330,7 +363,7 @@ class CareerGuidanceApp(customtkinter.CTk):
                                                  command=lambda: self.report_generator.download_results(
                                                      self.user_data, kategori_tertinggi, deskripsi, 
                                                      rekomendasi_list, skor_lengkap, chart_bytes_for_pdf, 
-                                                     self.quiz_logic.riasec_descriptions # Teruskan riasec_descriptions
+                                                     self.quiz_logic.riasec_descriptions 
                                                  ))
         download_button.grid(row=0, column=0, padx=5, pady=10, sticky="e")
 
@@ -339,8 +372,8 @@ class CareerGuidanceApp(customtkinter.CTk):
 
     def reset_and_start_over(self):
         """Meriset aplikasi dan kembali ke layar awal."""
-        self.quiz_logic.reset_quiz() # Menggunakan QuizLogic
-        self.user_data = { # Reset user_data di app
+        self.quiz_logic.reset_quiz() 
+        self.user_data = {
             "nama": "",
             "alamat": "",
             "usia": "",
