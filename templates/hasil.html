@@ -1,24 +1,41 @@
 <!doctype html>
 <head>
     <title>Hasil Tes Anda</title>
+    <!-- Hubungkan file CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <h1>Hasil Tes Anda</h1>
-
+        
         <p>Kategori minat tertinggi Anda adalah: <strong>{{ kategori_tertinggi }}</strong></p>
-
-        <h2>Deskripsi Tipe Kepribadian Anda</h2>
+        
+        <h2>Deskripsi Tipe Minat Anda</h2>
         <p>{{ deskripsi }}</p>
+        
+        <h2>Rekomendasi Karir untuk Anda</h2>
+        {% if rekomendasi %}
+            <ul>
+                {% for karir in rekomendasi %}
+                <li>{{ karir }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Tidak ada rekomendasi karir yang tersedia untuk kategori ini saat ini.</p>
+        {% endif %}
 
-        <h2>Rekomendasi Karir</h2>
-        <ul>
-            {% for karir in rekomendasi %}
-            <li>{{ karir }}</li>
+        ---
+
+        <h2>Skor Minat Anda untuk Setiap Tipe Holland (RIASEC)</h2>
+        <div class="score-summary">
+            {% for kategori, nilai in skor_lengkap.items() %}
+            <div class="score-item">
+                <strong>{{ kategori }} ({{ riasec_desc[kategori].split(' ')[0].replace('(', '') }}):</strong> {{ nilai }} Poin
+                <p>{{ riasec_desc[kategori] }}</p>
+            </div>
             {% endfor %}
-        </ul>
-
+        </div>
+        
         <a href="/" class="button">Ulangi Tes</a>
     </div>
 </body>
