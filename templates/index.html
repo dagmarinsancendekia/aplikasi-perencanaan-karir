@@ -1,0 +1,16 @@
+<!doctype html>
+<title>Tes Perencanaan Karir</title>
+<h1>Jawab Pertanyaan Berikut</h1>
+<form action="/hasil" method="post">
+    {% for soal in soal_tes %}
+    <p>{{ soal.id }}. {{ soal.pertanyaan }}</p>
+    <label>
+        <input type="radio" name="soal_{{ soal.id }}" value="setuju"> Setuju
+    </label>
+    <label>
+        <input type="radio" name="soal_{{ soal.id }}" value="tidak_setuju"> Tidak Setuju
+    </label>
+    {% endfor %}
+    <br>
+    <input type="submit" value="Lihat Hasil">
+</form>
